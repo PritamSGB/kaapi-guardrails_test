@@ -48,7 +48,8 @@ backend/app/evaluation/
 │   └── run.py                             # PII evaluation script
 ├── topic_relevance/
 │   └── run.py                             # Topic relevance evaluation script
-└── toxicity/                              # Toxicity evaluation scripts
+└── toxicity/
+    └── run.py                             # Toxicity evaluation script (LlamaGuard7B, NSFWText, ProfanityFree)
 ```
 
 ## Prerequisites
@@ -91,7 +92,7 @@ Validators that use LLM-as-judge approach will require credentials for LLM provi
 
 ## Running All Evaluations
 
-To run all individual validator evaluations in sequence (lexical slur, PII, gender assumption bias, ban list, topic relevance):
+To run all individual validator evaluations in sequence (lexical slur, PII, gender assumption bias, ban list, topic relevance, toxicity):
 
 ```bash
 bash scripts/run_all_evaluations.sh
@@ -262,6 +263,49 @@ python3 app/evaluation/topic_relevance/run.py
 
 ---
 
+### Toxicity (`llamaguard_7b`, `nsfw_text`, `profanity_free`)
+
+**Script:** `app/evaluation/toxicity/run.py`
+
+**Datasets:**
+- `datasets/toxicity/toxicity_test_hasoc.csv` (The HASOC (Hate Speech and Offensive Content) dataset is a multilingual benchmark (mainly Hindi, English, and code-mixed text) used to train and evaluate models for detecting hate speech, offensive language, and abusive content in social media.)
+- `datasets/toxicity/toxicity_test_sharechat.csv`
+
+Expected columns — HASOC dataset:
+
+- `text` — tweet/comment text to validate
+- `task1` — ground truth label (`HOF` = hate/offensive/profanity → `1`, `NOT` → `0`)
+- `lang` — language code (informational)
+
+Expected columns — ShareChat dataset:
+
+- `commentText` — comment text to validate
+- `label` — binary ground truth (`1` = toxic, `0` = not toxic)
+- `language` — language label (informational)
+
+**What it does:** Runs three validators — `LlamaGuard7B`, `NSFWText`, and `ProfanityFree` — across both datasets independently. For each validator, a binary prediction is recorded (`1` if `FailResult`, `0` otherwise) and compared against the ground truth label to compute classification metrics.
+
+**Output per dataset:**
+
+```
+outputs/toxicity/predictions_hasoc.csv
+outputs/toxicity/metrics_hasoc.json
+outputs/toxicity/predictions_sharechat.csv
+outputs/toxicity/metrics_sharechat.json
+```
+
+Each predictions CSV contains the source text, ground truth (`y_true`), and one `*_pred` column per validator. Each metrics JSON contains accuracy, precision, recall, F1, and performance stats broken down per validator.
+
+**Run:**
+
+```bash
+python3 app/evaluation/toxicity/run.py
+```
+
+> **Note:** `LlamaGuard7B` uses remote inferencing — requires a valid `GUARDRAILS_HUB_API_KEY` and internet access. `NSFWText` downloads the `textdetox/xlmr-large-toxicity-classifier` model on first run.
+
+---
+
 ## Multiple Validators Evaluation (End-to-End)
 
 This evaluation runs multiple validators **together** against a dataset via the live guardrails API. Unlike the individual evaluations above, this is an **end-to-end integration test** — it hits the API rather than calling validators directly.
@@ -393,6 +437,7 @@ Each evaluation script expects a specific filename — files must be named exact
 | Ban List               | `ban_list_testing_dataset.csv`                                                                                      |
 | Multiple Validators    | `multi_validator_whatsapp_dataset.csv`                                                                              |
 | Topic Relevance        | `topic_relevance/education-topic-relevance-dataset.csv`, `topic_relevance/healthcare-topic-relevance-dataset.csv` |
+| Toxicity               | `toxicity/toxicity_test_hasoc.csv`, `toxicity/toxicity_test_sharechat.csv`                                        |
 
 Topic relevance also requires plain-text topic config files alongside each dataset:
 
