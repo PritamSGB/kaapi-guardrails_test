@@ -6,6 +6,7 @@ from app.core.validators.pii_remover import PIIRemover
 from app.evaluation.common.helper import (
     Profiler,
     build_evaluation_report,
+    build_validator_config,
     compute_binary_metrics,
     write_csv,
     write_json,
@@ -19,14 +20,14 @@ df = pd.read_csv(BASE_DIR / "datasets" / "pii_detection_testing_dataset.csv")
 
 validator = PIIRemover()
 
-config = {
-    "entity_types": validator.entity_types,
-    "threshold": validator.threshold,
-    "nlp_engine_type": validator.nlp_engine_type,
-    "model_name": validator.model_name,
-    "on_fail": validator.on_fail,
-    "language": "en",  # hardcoded in PIIRemover._validate; not a constructor param
-}
+config = build_validator_config(
+    validator,
+    entity_types=validator.entity_types,
+    threshold=validator.threshold,
+    nlp_engine_type=validator.nlp_engine_type,
+    model_name=validator.model_name,
+    language="en",  # hardcoded in PIIRemover._validate; not a constructor param
+)
 
 
 def run_pii(text: str) -> tuple[str, int]:
