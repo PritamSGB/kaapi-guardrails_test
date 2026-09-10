@@ -47,7 +47,7 @@ entity_report = compute_entity_metrics(
 )
 
 y_true = (df["label"] == "pii").astype(int)
-binary_report = compute_binary_metrics(y_true, df["pii_detected"])
+combined_report = compute_binary_metrics(y_true, df["pii_detected"])
 
 # ---- Save outputs ----
 write_csv(df, OUT_DIR / "predictions.csv")
@@ -59,7 +59,7 @@ write_json(
         profiler=p,
         config=config,
         entity_metrics=entity_report,
-        binary_metrics=binary_report,
+        combined_metrics=combined_report,
     ),
     OUT_DIR / "metrics.json",
 )
