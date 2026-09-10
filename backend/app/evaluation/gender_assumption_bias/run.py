@@ -18,6 +18,12 @@ df = pd.read_csv(BASE_DIR / "datasets" / "gender_bias_assumption_dataset.csv")
 
 validator = GenderAssumptionBias()
 
+config = {
+    "categories": [category.value for category in validator.categories],
+    "on_fail": validator.on_fail_descriptor,
+    "num_bias_words_loaded": len(validator.gender_bias_list),
+}
+
 with Profiler() as p:
     df["biased_result"] = (
         df["biased input"]
@@ -57,6 +63,7 @@ write_json(
         guardrail="gender_assumption_bias",
         num_samples=len(df) * 2,
         profiler=p,
+        config=config,
         metrics=metrics,
     ),
     OUT_DIR / "metrics.json",
