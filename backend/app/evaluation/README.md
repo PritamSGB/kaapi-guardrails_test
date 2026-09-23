@@ -13,7 +13,6 @@ backend/app/evaluation/
 ├── datasets/                              # Evaluation datasets (downloaded separately)
 │   ├── ban_list_testing_dataset.csv
 │   ├── gender_bias_assumption_dataset.csv
-│   ├── lexical_slur_testing_dataset.csv
 │   ├── multi_validator_whatsapp_dataset.csv
 │   ├── pii_detection_testing_dataset.csv
 │   ├── sharechat_toxic_dataset.csv
@@ -26,15 +25,12 @@ backend/app/evaluation/
 │       └── toxicity_test_combined.csv     # Standardized input consumed by run.py (see Toxicity section for its source mapping)
 ├── gender_assumption_bias/
 │   └── run.py                             # Gender assumption bias evaluation script
-├── lexical_slur/
-│   └── run.py                             # Lexical slur evaluation script
 ├── multiple_validators/
 │   ├── config.json                        # Multi-validator run configuration
 │   └── run.py                             # End-to-end multi-validator evaluation script
 ├── outputs/                               # Generated outputs (created at runtime)
 │   ├── ban_list/
 │   ├── gender_assumption_bias/
-│   ├── lexical_slur/
 │   ├── multi_validator_whatsapp/
 │   ├── multiple_validators/
 │   ├── pii_remover/
@@ -91,7 +87,7 @@ Validators that use LLM-as-judge approach will require credentials for LLM provi
 
 ## Running All Evaluations
 
-To run all individual validator evaluations in sequence (lexical slur, PII, gender assumption bias, ban list, topic relevance, toxicity):
+To run all individual validator evaluations in sequence (PII, gender assumption bias, ban list, topic relevance, toxicity):
 
 ```bash
 bash scripts/run_all_evaluations.sh
@@ -108,34 +104,6 @@ Run any individual evaluation from the `backend/` directory:
 ```bash
 python3 app/evaluation/<validator_folder>/run.py
 ```
-
-### Lexical Slur (`uli_slur_match`)
-
-**Script:** `app/evaluation/lexical_slur/run.py`
-
-**Dataset:** `datasets/lexical_slur_testing_dataset.csv`
-
-Expected columns in input csv:
-
-- `commentText` — text to validate
-- `label` — ground truth (`1` = abusive, `0` = not abusive)
-
-**What it does:** Runs each row through the `LexicalSlur` validator and records a binary prediction (`1` if `FailResult`, `0` otherwise). Computes binary classification metrics against the ground truth labels.
-
-**Output:**
-
-```
-outputs/lexical_slur/predictions.csv
-outputs/lexical_slur/metrics.json
-```
-
-**Run:**
-
-```bash
-python3 app/evaluation/lexical_slur/run.py
-```
-
----
 
 ### PII Remover (`pii_remover`)
 
@@ -287,6 +255,8 @@ Each row is tagged with `dataset` = its source name. To add or refresh a source,
 
 **What it does:** Runs four validators — `LlamaGuard7B`, `NSFWText`, `ProfanityFree`, and `LexicalSlur` — against the combined dataset. For each validator, a binary prediction is recorded (`1` if `FailResult`, `0` otherwise) and compared against the ground truth label to compute classification metrics, further broken down per original `dataset` source (`source_metrics`). A `combined_pred` column (logical OR across whichever validators ran, computed from their already-produced `*_pred` columns without re-running anything) is also recorded, with its own `combined` entry (and `source_metrics` breakdown) in the metrics JSON — useful for seeing each validator's standalone effectiveness alongside what running them together would catch, both overall and per source.
 
+`LexicalSlur` (`uli_slur_match`) is evaluated here rather than in its own script — this eval covers it over a superset of the rows its standalone eval used, so to reproduce that older run exactly, use `--validators lexical_slur --sources lexical`.
+
 Use `--validators` to run only a subset of validators instead of all four:
 
 ```bash
@@ -385,7 +355,7 @@ The output CSV contains `ID`, `text`, `validators_present`, and `response` (the 
 
 ### Binary Classification Metrics (`metrics.json`)
 
-Used by lexical slur, gender assumption bias, ban list, and topic relevance evaluations.
+Used by the gender assumption bias, ban list, topic relevance, and toxicity evaluations.
 
 | Metric             | Description                                               |
 | ------------------ | --------------------------------------------------------- |
@@ -445,7 +415,6 @@ Each evaluation script expects a specific filename — files must be named exact
 
 | Validator              | Expected filename                                                                                                     |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Lexical Slur           | `lexical_slur_testing_dataset.csv`                                                                                  |
 | PII Remover            | `pii_detection_testing_dataset.csv`                                                                                 |
 | Gender Assumption Bias | `gender_bias_assumption_dataset.csv`                                                                                |
 | Ban List               | `ban_list_testing_dataset.csv`                                                                                      |
