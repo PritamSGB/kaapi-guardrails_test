@@ -175,7 +175,10 @@ def main() -> None:
                 "guardrail": backend["name"],
                 "domains": domain_labels,
                 "num_samples": sum(
-                    m["true_positive"] + m["true_negative"] + m["false_positive"] + m["false_negative"]
+                    m["true_positive"]
+                    + m["true_negative"]
+                    + m["false_positive"]
+                    + m["false_negative"]
                     for m in domain_metrics
                 ),
                 **combined,
