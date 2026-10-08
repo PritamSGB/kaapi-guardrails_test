@@ -26,7 +26,9 @@ def _build_llamaguard_7b():
     # backend/app/core/validators/README.md), and its local .guardrails/hub_registry.json
     # entry still points at the now-defunct guardrails_grhub_llamaguard_7b package, so a
     # top-level import would break every run of this script, not just ones selecting it.
-    from guardrails.hub import LlamaGuard7B  # noqa: not yet migrated, see backend README
+    from guardrails.hub import (
+        LlamaGuard7B,
+    )  # noqa: not yet migrated, see backend README
 
     return LlamaGuard7B(on_fail="noop")
 
