@@ -226,6 +226,14 @@ The predictions CSV includes `scope_score` (the LLM-assigned score) and `error_m
 python3 app/evaluation/topic_relevance/run.py
 ```
 
+Use `--backend` to run only one of the two validators (`topic_relevance` or `topic_relevance_llm`) instead of both:
+
+```bash
+python3 app/evaluation/topic_relevance/run.py --backend topic_relevance_llm
+```
+
+`topic_relevance` (the `LLMCritic`-based validator) is only imported when that backend actually runs, so `--backend topic_relevance_llm` works without installing the `llm_critic` hub validator.
+
 > **Note:** Requires `OPENAI_API_KEY` to be set. Uses `gpt-4o-mini` by default (`DEFAULT_CONFIG` in the script).
 
 ---
@@ -409,7 +417,18 @@ All `metrics.json` files include a `performance` block:
 
 ## Dataset Structure
 
-Download all datasets from [Google Drive](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89). The Drive contains one folder per validator. Download the CSV files and place them in `backend/app/evaluation/datasets/`.
+Datasets are hosted on Google Drive across two folders. Download the CSV files and place them in `backend/app/evaluation/datasets/`.
+
+[Current datasets](https://drive.google.com/drive/folders/1bM8GxH2lVlcT9Q79oSZhxYaWIP9Xhpya) — subfolders here are named by product area rather than by validator:
+
+| Drive folder         | Validator              |
+| -------------------- | ---------------------- |
+| `Privacy protection` | PII Remover            |
+| `Content Safety`     | Toxicity               |
+| `Gender neutrality`  | Gender Assumption Bias |
+| `Scope Control`      | Topic Relevance        |
+
+[Earlier datasets](https://drive.google.com/drive/u/0/folders/1Rd1LH-oEwCkU0pBDRrYYedExorwmXA89) — ban list and multiple validators, with one subfolder per validator.
 
 Each evaluation script expects a specific filename — files must be named exactly as listed below:
 
